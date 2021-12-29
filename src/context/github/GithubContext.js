@@ -1,4 +1,5 @@
 import { createContext, useReducer } from 'react'
+import { createRoutesFromChildren } from 'react-router-dom'
 import githubReducer from './GithubReducer'
 
 const GithubContext = createContext()
@@ -11,7 +12,9 @@ export const GithubProvider = ({ children }) => {
   const [loading, setLoading] = useState(true) */
   const initialState = {
     users: [],
-    loading: false
+    loading: false,
+    repos: [],
+    user: {}
   }
 
   const [state, dispatch] = useReducer(githubReducer, initialState)
@@ -42,6 +45,58 @@ export const GithubProvider = ({ children }) => {
     //console.log('data', data)
   }
 
+  // Get single user
+  const getUser = async login => {
+    setLoading()
+
+    const response = await fetch(`${GITHUB_URL}/users/${login}`, {
+      headers: {
+        Authorization: `token ${GITHUB_TOKEN}`
+      }
+    })
+
+    if (response.ok) {
+      const data = await response.json()
+      console.log('response.ok then data: ', data)
+
+      dispatch({
+        type: 'GET_USER',
+        payload: data
+      })
+    } else {
+      window.location = '/notfound'
+    }
+  }
+
+  // Get user repos
+  const getUserRepos = async login => {
+    setLoading()
+
+    // The URLSearchParams interface defines utility methods to work with the query string of a URL.
+    const params = new URLSearchParams({
+      //
+      sort: 'created',
+      per_page: 10
+    })
+
+    const response = await fetch(
+      `${GITHUB_URL}/users/${login}/repos?${params}`,
+      {
+        headers: {
+          Authorization: `token ${GITHUB_TOKEN}`
+        }
+      }
+    )
+
+    const data = await response.json()
+    /*     setUsers(data)
+  setLoading(false) */
+    dispatch({
+      type: 'GET_REPOS',
+      payload: data
+    })
+  }
+
   // Set loading
   const setLoading = () => {
     return dispatch({
@@ -61,8 +116,12 @@ export const GithubProvider = ({ children }) => {
       value={{
         users: state.users,
         loading: state.loading,
+        user: state.user,
+        repos: state.repos,
         searchUsers,
-        clearUsers
+        clearUsers,
+        getUser,
+        getUserRepos
       }}
     >
       {children}
