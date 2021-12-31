@@ -48,7 +48,7 @@ export const searchUsers = async text => {
   }
 } */
 
-// Get User and repos
+// Get User and repos, merged the getUser and getUserRepos methods into one only
 
 export const getUserAndRepos = async login => {
   const [user, repos] = await Promise.all([
